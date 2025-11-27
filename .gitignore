@@ -210,3 +210,4 @@ __marimo__/
 # Dataset
 dataset/
 src/stdout
+src/__pycache__
