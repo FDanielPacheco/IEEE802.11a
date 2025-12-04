@@ -89,18 +89,20 @@ class main(gr.top_block, Qt.QWidget):
         ##################################################
         self.noise = noise = -120
         self.tx_gain = tx_gain = 0.75
+        self.tx_att = tx_att = 1
         self.trigger_power = trigger_power = 1e-4
         self.trigger_level = trigger_level = 0.7
         self.sync_length = sync_length = 320
         self.snr = snr = 15
         self.samp_rate = samp_rate = 20e6
+        self.rx_gain = rx_gain = 61
         self.plateau_n = plateau_n = 20
         self.pdu_length = pdu_length = 500
         self.out_buf_size = out_buf_size = 96000
         self.noise_v = noise_v = 10**(noise/10)
         self.lo_offset = lo_offset = 0
         self.interval = interval = 5000
-        self.freq = freq = 5890000000
+        self.freq = freq = 2417000000
         self.fir_win = fir_win = 48
         self.encoding = encoding = 0
         self.dif_lo = dif_lo = 1
@@ -256,9 +258,67 @@ class main(gr.top_block, Qt.QWidget):
         self._tx_gain_range = Range(0, 1, 0.01, 0.75, 200)
         self._tx_gain_win = RangeWidget(self._tx_gain_range, self.set_tx_gain, "'tx_gain'", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._tx_gain_win)
+        self._tx_att_range = Range(0, 100, 0.01, 1, 200)
+        self._tx_att_win = RangeWidget(self._tx_att_range, self.set_tx_att, "TX Attenuation", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._tx_att_win)
         self._trigger_power_range = Range(1e-6, 1, 1e-6, 1e-4, 50)
         self._trigger_power_win = RangeWidget(self._trigger_power_range, self.set_trigger_power, "Trigger Power Level", "counter", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._trigger_power_win)
+        self._rx_gain_range = Range(0, 74.5, 0.01, 61, 200)
+        self._rx_gain_win = RangeWidget(self._rx_gain_range, self.set_rx_gain, "RX Gain", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._rx_gain_win)
+        self.qtgui_time_sink_x_1 = qtgui.time_sink_c(
+            512, #size
+            samp_rate, #samp_rate
+            'RX Waveform', #name
+            1, #number of inputs
+            None # parent
+        )
+        self.qtgui_time_sink_x_1.set_update_time(0.10)
+        self.qtgui_time_sink_x_1.set_y_axis(-12, 12)
+
+        self.qtgui_time_sink_x_1.set_y_label('Amplitude', "")
+
+        self.qtgui_time_sink_x_1.enable_tags(False)
+        self.qtgui_time_sink_x_1.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.qtgui_time_sink_x_1.enable_autoscale(False)
+        self.qtgui_time_sink_x_1.enable_grid(True)
+        self.qtgui_time_sink_x_1.enable_axis_labels(True)
+        self.qtgui_time_sink_x_1.enable_control_panel(False)
+        self.qtgui_time_sink_x_1.enable_stem_plot(False)
+
+        self.qtgui_time_sink_x_1.disable_legend()
+
+        labels = ['Signal 1', 'Signal 2', 'Signal 3', 'Signal 4', 'Signal 5',
+            'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ['blue', 'red', 'green', 'black', 'cyan',
+            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+        styles = [1, 0, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        markers = [0, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1]
+
+
+        for i in range(2):
+            if len(labels[i]) == 0:
+                if (i % 2 == 0):
+                    self.qtgui_time_sink_x_1.set_line_label(i, "Re{{Data {0}}}".format(i/2))
+                else:
+                    self.qtgui_time_sink_x_1.set_line_label(i, "Im{{Data {0}}}".format(i/2))
+            else:
+                self.qtgui_time_sink_x_1.set_line_label(i, labels[i])
+            self.qtgui_time_sink_x_1.set_line_width(i, widths[i])
+            self.qtgui_time_sink_x_1.set_line_color(i, colors[i])
+            self.qtgui_time_sink_x_1.set_line_style(i, styles[i])
+            self.qtgui_time_sink_x_1.set_line_marker(i, markers[i])
+            self.qtgui_time_sink_x_1.set_line_alpha(i, alphas[i])
+
+        self._qtgui_time_sink_x_1_win = sip.wrapinstance(self.qtgui_time_sink_x_1.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_time_sink_x_1_win)
         self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
             1024, #size
             samp_rate, #samp_rate
@@ -486,6 +546,7 @@ class main(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_throttle_0, 0), (self.blocks_delay_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_const_vxx_0_1, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.qtgui_time_sink_x_1, 0))
         self.connect((self.channels_channel_model_0, 0), (self.blocks_throttle_0, 0))
         self.connect((self.fft_vxx_0, 0), (self.ieee802_11_frame_equalizer_0, 0))
         self.connect((self.foo_packet_pad2_0, 0), (self.blocks_multiply_const_vxx_2, 0))
@@ -520,6 +581,12 @@ class main(gr.top_block, Qt.QWidget):
 
     def set_tx_gain(self, tx_gain):
         self.tx_gain = tx_gain
+
+    def get_tx_att(self):
+        return self.tx_att
+
+    def set_tx_att(self, tx_att):
+        self.tx_att = tx_att
 
     def get_trigger_power(self):
         return self.trigger_power
@@ -558,7 +625,14 @@ class main(gr.top_block, Qt.QWidget):
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
         self.ieee802_11_frame_equalizer_0.set_bandwidth(self.samp_rate)
         self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
+        self.qtgui_time_sink_x_1.set_samp_rate(self.samp_rate)
         self.wifi_phy_hier_0.set_bandwidth(self.samp_rate)
+
+    def get_rx_gain(self):
+        return self.rx_gain
+
+    def set_rx_gain(self, rx_gain):
+        self.rx_gain = rx_gain
 
     def get_plateau_n(self):
         return self.plateau_n
@@ -644,6 +718,8 @@ class main(gr.top_block, Qt.QWidget):
 
 
 def main(top_block_cls=main, options=None):
+    if gr.enable_realtime_scheduling() != gr.RT_OK:
+        print("Error: failed to enable real-time scheduling.")
 
     if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
         style = gr.prefs().get_string('qtgui', 'style', 'raster')
