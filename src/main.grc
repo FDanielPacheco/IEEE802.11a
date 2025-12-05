@@ -1575,8 +1575,8 @@ blocks:
     label7: Signal 7
     label8: Signal 8
     label9: Signal 9
-    legend: 'True'
-    marker1: '-1'
+    legend: 'False'
+    marker1: '0'
     marker10: '-1'
     marker2: '-1'
     marker3: '-1'

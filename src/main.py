@@ -339,6 +339,7 @@ class main(gr.top_block, Qt.QWidget):
         self.qtgui_time_sink_x_0.enable_control_panel(False)
         self.qtgui_time_sink_x_0.enable_stem_plot(False)
 
+        self.qtgui_time_sink_x_0.disable_legend()
 
         labels = ['Signal 1', 'Signal 2', 'Signal 3', 'Signal 4', 'Signal 5',
             'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
@@ -350,7 +351,7 @@ class main(gr.top_block, Qt.QWidget):
             1.0, 1.0, 1.0, 1.0, 1.0]
         styles = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
-        markers = [-1, -1, -1, -1, -1,
+        markers = [0, -1, -1, -1, -1,
             -1, -1, -1, -1, -1]
 
 
