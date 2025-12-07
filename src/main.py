@@ -21,10 +21,6 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
-import os
-import sys
-sys.path.append(os.environ.get('GRC_HIER_PATH', os.path.expanduser('~/.grc_gnuradio')))
-
 from PyQt5 import Qt
 from PyQt5.QtCore import QObject, pyqtSlot
 from gnuradio import qtgui
@@ -33,9 +29,11 @@ import sip
 from gnuradio import blocks
 import pmt
 from gnuradio import channels
+from gnuradio import digital
 from gnuradio import fft
 from gnuradio.fft import window
 from gnuradio import gr
+import sys
 import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
@@ -43,10 +41,8 @@ from gnuradio import eng_notation
 from gnuradio import gr, pdu
 from gnuradio.qtgui import Range, RangeWidget
 from PyQt5 import QtCore
-from wifi_phy_hier import wifi_phy_hier  # grc-generated hier_block
 import foo
 import ieee802_11
-import main_epy_block_0 as epy_block_0  # embedded python block
 
 
 
@@ -101,6 +97,7 @@ class main(gr.top_block, Qt.QWidget):
         self.pdu_length = pdu_length = 500
         self.out_buf_size = out_buf_size = 96000
         self.noise_v = noise_v = 10**(noise/10)
+        self.max_symbols = max_symbols = int(5 + 1 + ((16 + 800 * 8 + 6) * 2) / 24)
         self.lo_offset = lo_offset = 0
         self.interval = interval = 5000
         self.freq = freq = 2417000000
@@ -115,9 +112,6 @@ class main(gr.top_block, Qt.QWidget):
         # Blocks
         ##################################################
 
-        self._trigger_power_range = Range(1e-6, 1, 1e-6, 1e-4, 50)
-        self._trigger_power_win = RangeWidget(self._trigger_power_range, self.set_trigger_power, "Trigger Power Level", "counter", float, QtCore.Qt.Horizontal)
-        self.top_layout.addWidget(self._trigger_power_win)
         self._trigger_level_range = Range(0, 1, 0.01, 0.7, 50)
         self._trigger_level_win = RangeWidget(self._trigger_level_range, self.set_trigger_level, "Plateau Trigger", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._trigger_level_win)
@@ -260,19 +254,15 @@ class main(gr.top_block, Qt.QWidget):
         self._att_sink_range = Range(0.00001, 1, 0.01, 0.01, 200)
         self._att_sink_win = RangeWidget(self._att_sink_range, self.set_att_sink, "Input Waveform Attenuation (Display Only)", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._att_sink_win)
-        self.wifi_phy_hier_0 = wifi_phy_hier(
-            bandwidth=samp_rate,
-            chan_est=ieee802_11.LS,
-            encoding=ieee802_11.Encoding(encoding),
-            frequency=freq,
-            sensitivity=0.56,
-        )
         self._tx_gain_range = Range(0, 1, 0.01, 0.75, 200)
         self._tx_gain_win = RangeWidget(self._tx_gain_range, self.set_tx_gain, "'tx_gain'", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._tx_gain_win)
         self._tx_att_range = Range(0, 100, 0.01, 1, 200)
         self._tx_att_win = RangeWidget(self._tx_att_range, self.set_tx_att, "TX Attenuation", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._tx_att_win)
+        self._trigger_power_range = Range(1e-6, 1, 1e-6, 1e-4, 50)
+        self._trigger_power_win = RangeWidget(self._trigger_power_range, self.set_trigger_power, "Trigger Power Level", "counter", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._trigger_power_win)
         self._rx_gain_range = Range(0, 74.5, 0.01, 61, 200)
         self._rx_gain_win = RangeWidget(self._rx_gain_range, self.set_rx_gain, "RX Gain", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._rx_gain_win)
@@ -410,7 +400,6 @@ class main(gr.top_block, Qt.QWidget):
 
         self._qtgui_const_sink_x_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_const_sink_x_0_win)
-        self.pdu_pdu_to_tagged_stream_0_0 = pdu.pdu_to_tagged_stream(gr.types.complex_t, 'packet_len')
         self.pdu_pdu_to_tagged_stream_0 = pdu.pdu_to_tagged_stream(gr.types.complex_t, 'packet_len')
         self._noise_range = Range(-200, 0, 0.1, -120, 50)
         self._noise_win = RangeWidget(self._noise_range, self.set_noise, "Noise Level (dBm)", "counter_slider", float, QtCore.Qt.Horizontal)
@@ -433,16 +422,32 @@ class main(gr.top_block, Qt.QWidget):
         self.top_layout.addWidget(self._lo_offset_tool_bar)
         self.ieee802_11_sync_short_0 = ieee802_11.sync_short(trigger_level, plateau_n, False, False)
         self.ieee802_11_sync_long_0 = ieee802_11.sync_long(sync_length, False, False)
+        self.ieee802_11_parse_mac_0_0 = ieee802_11.parse_mac(False, True)
         self.ieee802_11_parse_mac_0 = ieee802_11.parse_mac(False, True)
+        self.ieee802_11_mapper_0 = ieee802_11.mapper(ieee802_11.Encoding(encoding), False)
         self.ieee802_11_mac_0 = ieee802_11.mac([0x23, 0x23, 0x23, 0x23, 0x23, 0x23], [0x42, 0x42, 0x42, 0x42, 0x42, 0x42], [0xff, 0xff, 0xff, 0xff, 0xff, 255])
         self.ieee802_11_frame_equalizer_0 = ieee802_11.frame_equalizer(ieee802_11.Equalizer(chan_est), freq, samp_rate, False, False)
         self.ieee802_11_decode_mac_0 = ieee802_11.decode_mac(False, False)
+        self.ieee802_11_chunks_to_symbols_xx_0 = ieee802_11.chunks_to_symbols()
+        self.ieee802_11_chunks_to_symbols_xx_0.set_min_output_buffer((max_symbols * 48 * 8))
         self.foo_wireshark_connector_0_0 = foo.wireshark_connector(127, False)
         self.foo_wireshark_connector_0 = foo.wireshark_connector(127, False)
         self.foo_packet_pad2_0 = foo.packet_pad2(False, False, 0.001, 500, 0)
         self.foo_packet_pad2_0.set_min_output_buffer((out_buf_size * 10))
+        self.fft_vxx_0_0 = fft.fft_vcc(64, False, tuple([1/52**.5] * 64), True, 1)
+        self.fft_vxx_0_0.set_min_output_buffer((max_symbols * 48 * 8 * 10))
         self.fft_vxx_0 = fft.fft_vcc(64, True, window.rectangular(64), True, 1)
-        self.epy_block_0 = epy_block_0.basic_block(power_thres=trigger_power, window_size=80)
+        self.digital_packet_headergenerator_bb_0 = digital.packet_headergenerator_bb(ieee802_11.signal_field().formatter(), "packet_len")
+        self.digital_ofdm_cyclic_prefixer_0_0 = digital.ofdm_cyclic_prefixer(
+            64,
+            64 + 16,
+            2,
+            "packet_len")
+        self.digital_ofdm_cyclic_prefixer_0_0.set_min_output_buffer((max_symbols * 48 * 8 * 10))
+        self.digital_ofdm_carrier_allocator_cvc_0_0_0 = digital.ofdm_carrier_allocator_cvc( 64, (list(range(-26, -21)) + list(range(-20, -7)) + list(range(-6, 0)) + list(range(1, 7)) + list(range(8, 21)) +list( range(22, 27)),), ((-21, -7, 7, 21), ), ((1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (1, 1, 1, -1), (1, 1, 1, -1), (1, 1, 1, -1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1), (-1, -1, -1, 1)), ((0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (-1.4719601443879746-1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, (1.4719601443879746+1.4719601443879746j), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), (0, 0j, 0, 0j, 0, 0j, -1, 1j, -1, 1j, -1, 1j, -1, -1j, 1, 1j, 1, -1j, -1, 1j, 1, 1j, 1, 1j, 1, 1j, -1, (-0-1j), 1, -1j, -1, 1j, 0, -1j, 1, (-0-1j), 1, -1j, 1, 1j, -1, -1j, 1, (-0-1j), -1, 1j, 1, 1j, 1, 1j, 1, 1j, -1, -1j, 1, 1j, 1, -1j, -1, 0j, 0, 0j, 0, 0j), (0, 0, 0, 0, 0, 0, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 0, 1, -1, -1, 1, 1, -1, 1, -1, 1, -1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, 1, 1, 1, 1, 0, 0, 0, 0, 0)), "packet_len", True)
+        self.digital_ofdm_carrier_allocator_cvc_0_0_0.set_min_output_buffer((max_symbols * 48 * 8))
+        self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bc([-1, 1], 1)
+        self.digital_chunks_to_symbols_xx_0.set_min_output_buffer((max_symbols * 48 * 8 * 2))
         self.channels_channel_model_0 = channels.channel_model(
             noise_voltage=1,
             frequency_offset=0.0,
@@ -451,12 +456,12 @@ class main(gr.top_block, Qt.QWidget):
             noise_seed=0,
             block_tags=False)
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
+        self.blocks_tagged_stream_mux_0 = blocks.tagged_stream_mux(gr.sizeof_gr_complex*1, "packet_len", 1)
+        self.blocks_tagged_stream_mux_0.set_min_output_buffer((max_symbols * 48 * 8))
         self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, 64)
         self.blocks_null_source_0 = blocks.null_source(gr.sizeof_float*1)
         self.blocks_multiply_const_xx_0 = blocks.multiply_const_cc((10**(snr/10.0))**.5, 1)
         self.blocks_multiply_const_vxx_3 = blocks.multiply_const_cc(att_sink)
-        self.blocks_multiply_const_vxx_2_0 = blocks.multiply_const_cc(1)
-        self.blocks_multiply_const_vxx_2 = blocks.multiply_const_cc(1)
         self.blocks_multiply_const_vxx_1 = blocks.multiply_const_cc(1)
         self.blocks_multiply_const_vxx_0_1 = blocks.multiply_const_cc(1)
         self.blocks_multiply_const_vxx_0_0 = blocks.multiply_const_cc(0.6)
@@ -467,11 +472,12 @@ class main(gr.top_block, Qt.QWidget):
         self.blocks_moving_average_xx_0 = blocks.moving_average_cc(fir_win, 1, 4000, 1)
         self.blocks_message_strobe_0_0 = blocks.message_strobe(pmt.intern("".join(chr(i) for i in range(ord('A'), ord('Z')+1)) * (pdu_length // 26 + 1)), interval)
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
-        self.blocks_file_sink_0_0 = blocks.file_sink(gr.sizeof_char*1, '/tmp/wifi_tx.pcap', True)
+        self.blocks_file_sink_0_0 = blocks.file_sink(gr.sizeof_char*1, '/tmp/wifi_tx.pcap', False)
         self.blocks_file_sink_0_0.set_unbuffered(True)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/tmp/wifi_rx.pcap', True)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/tmp/wifi_rx.pcap', False)
         self.blocks_file_sink_0.set_unbuffered(True)
         self.blocks_divide_xx_0 = blocks.divide_ff(1)
+        self.blocks_delay_1 = blocks.delay(gr.sizeof_gr_complex*1, 1200)
         self.blocks_delay_0_0 = blocks.delay(gr.sizeof_gr_complex*1, sync_length)
         self.blocks_delay_0 = blocks.delay(gr.sizeof_gr_complex*1, 16)
         self.blocks_complex_to_mag_squared_0_0 = blocks.complex_to_mag_squared(1)
@@ -485,17 +491,18 @@ class main(gr.top_block, Qt.QWidget):
         self.msg_connect((self.blocks_message_strobe_0_0, 'strobe'), (self.ieee802_11_mac_0, 'app in'))
         self.msg_connect((self.ieee802_11_decode_mac_0, 'out'), (self.ieee802_11_parse_mac_0, 'in'))
         self.msg_connect((self.ieee802_11_frame_equalizer_0, 'symbols'), (self.pdu_pdu_to_tagged_stream_0, 'pdus'))
-        self.msg_connect((self.ieee802_11_mac_0, 'phy out'), (self.wifi_phy_hier_0, 'mac_in'))
+        self.msg_connect((self.ieee802_11_mac_0, 'phy out'), (self.ieee802_11_mapper_0, 'in'))
+        self.msg_connect((self.ieee802_11_mac_0, 'phy out'), (self.ieee802_11_parse_mac_0_0, 'in'))
         self.msg_connect((self.ieee802_11_parse_mac_0, 'out'), (self.foo_wireshark_connector_0, 'in'))
-        self.msg_connect((self.wifi_phy_hier_0, 'mac_out'), (self.foo_wireshark_connector_0_0, 'in'))
-        self.msg_connect((self.wifi_phy_hier_0, 'carrier'), (self.pdu_pdu_to_tagged_stream_0_0, 'pdus'))
+        self.msg_connect((self.ieee802_11_parse_mac_0_0, 'out'), (self.foo_wireshark_connector_0_0, 'in'))
         self.connect((self.blocks_add_const_vxx_0, 0), (self.qtgui_time_sink_x_0, 1))
         self.connect((self.blocks_complex_to_mag_0, 0), (self.blocks_divide_xx_0, 0))
-        self.connect((self.blocks_complex_to_mag_squared_0_0, 0), (self.epy_block_0, 1))
+        self.connect((self.blocks_complex_to_mag_squared_0_0, 0), (self.blocks_moving_average_xx_0_0, 0))
         self.connect((self.blocks_delay_0, 0), (self.blocks_multiply_conjugate_cc_0, 1))
         self.connect((self.blocks_delay_0, 0), (self.blocks_multiply_const_vxx_3, 0))
         self.connect((self.blocks_delay_0, 0), (self.ieee802_11_sync_short_0, 0))
         self.connect((self.blocks_delay_0_0, 0), (self.ieee802_11_sync_long_0, 1))
+        self.connect((self.blocks_delay_1, 0), (self.blocks_throttle_0, 0))
         self.connect((self.blocks_divide_xx_0, 0), (self.blocks_float_to_complex_0, 0))
         self.connect((self.blocks_divide_xx_0, 0), (self.ieee802_11_sync_short_0, 2))
         self.connect((self.blocks_float_to_complex_0, 0), (self.qtgui_time_sink_x_0, 0))
@@ -508,29 +515,32 @@ class main(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_multiply_const_vxx_0_1, 0), (self.blocks_complex_to_mag_squared_0_0, 0))
         self.connect((self.blocks_multiply_const_vxx_1, 0), (self.blocks_delay_0_0, 0))
         self.connect((self.blocks_multiply_const_vxx_1, 0), (self.ieee802_11_sync_long_0, 0))
-        self.connect((self.blocks_multiply_const_vxx_2, 0), (self.blocks_multiply_const_vxx_2_0, 0))
-        self.connect((self.blocks_multiply_const_vxx_2_0, 0), (self.wifi_phy_hier_0, 0))
         self.connect((self.blocks_multiply_const_vxx_3, 0), (self.blocks_add_const_vxx_0, 0))
         self.connect((self.blocks_multiply_const_xx_0, 0), (self.channels_channel_model_0, 0))
         self.connect((self.blocks_null_source_0, 0), (self.blocks_float_to_complex_0, 1))
         self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_0, 0))
+        self.connect((self.blocks_tagged_stream_mux_0, 0), (self.digital_ofdm_carrier_allocator_cvc_0_0_0, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.blocks_delay_0, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_const_vxx_0_1, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.epy_block_0, 0))
-        self.connect((self.channels_channel_model_0, 0), (self.blocks_throttle_0, 0))
-        self.connect((self.epy_block_0, 0), (self.blocks_delay_0, 0))
-        self.connect((self.epy_block_0, 1), (self.blocks_moving_average_xx_0_0, 0))
-        self.connect((self.epy_block_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
+        self.connect((self.channels_channel_model_0, 0), (self.blocks_delay_1, 0))
+        self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.blocks_tagged_stream_mux_0, 0))
+        self.connect((self.digital_ofdm_carrier_allocator_cvc_0_0_0, 0), (self.fft_vxx_0_0, 0))
+        self.connect((self.digital_ofdm_cyclic_prefixer_0_0, 0), (self.blocks_multiply_const_vxx_0_0, 0))
+        self.connect((self.digital_packet_headergenerator_bb_0, 0), (self.digital_chunks_to_symbols_xx_0, 0))
         self.connect((self.fft_vxx_0, 0), (self.ieee802_11_frame_equalizer_0, 0))
-        self.connect((self.foo_packet_pad2_0, 0), (self.blocks_multiply_const_vxx_2, 0))
+        self.connect((self.fft_vxx_0_0, 0), (self.digital_ofdm_cyclic_prefixer_0_0, 0))
         self.connect((self.foo_packet_pad2_0, 0), (self.blocks_multiply_const_xx_0, 0))
         self.connect((self.foo_wireshark_connector_0, 0), (self.blocks_file_sink_0, 0))
         self.connect((self.foo_wireshark_connector_0_0, 0), (self.blocks_file_sink_0_0, 0))
+        self.connect((self.ieee802_11_chunks_to_symbols_xx_0, 0), (self.blocks_tagged_stream_mux_0, 1))
+        self.connect((self.ieee802_11_chunks_to_symbols_xx_0, 0), (self.qtgui_const_sink_x_0, 0))
         self.connect((self.ieee802_11_frame_equalizer_0, 0), (self.ieee802_11_decode_mac_0, 0))
+        self.connect((self.ieee802_11_mapper_0, 0), (self.digital_packet_headergenerator_bb_0, 0))
+        self.connect((self.ieee802_11_mapper_0, 0), (self.ieee802_11_chunks_to_symbols_xx_0, 0))
         self.connect((self.ieee802_11_sync_long_0, 0), (self.blocks_stream_to_vector_0, 0))
         self.connect((self.ieee802_11_sync_short_0, 0), (self.blocks_multiply_const_vxx_1, 0))
         self.connect((self.pdu_pdu_to_tagged_stream_0, 0), (self.qtgui_const_sink_x_0_0, 0))
-        self.connect((self.pdu_pdu_to_tagged_stream_0_0, 0), (self.qtgui_const_sink_x_0, 0))
-        self.connect((self.wifi_phy_hier_0, 0), (self.blocks_multiply_const_vxx_0_0, 0))
 
 
     def closeEvent(self, event):
@@ -565,7 +575,6 @@ class main(gr.top_block, Qt.QWidget):
 
     def set_trigger_power(self, trigger_power):
         self.trigger_power = trigger_power
-        self.epy_block_0.power_thres = self.trigger_power
 
     def get_trigger_level(self):
         return self.trigger_level
@@ -598,7 +607,6 @@ class main(gr.top_block, Qt.QWidget):
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
         self.ieee802_11_frame_equalizer_0.set_bandwidth(self.samp_rate)
         self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
-        self.wifi_phy_hier_0.set_bandwidth(self.samp_rate)
 
     def get_rx_gain(self):
         return self.rx_gain
@@ -631,6 +639,12 @@ class main(gr.top_block, Qt.QWidget):
     def set_noise_v(self, noise_v):
         self.noise_v = noise_v
 
+    def get_max_symbols(self):
+        return self.max_symbols
+
+    def set_max_symbols(self, max_symbols):
+        self.max_symbols = max_symbols
+
     def get_lo_offset(self):
         return self.lo_offset
 
@@ -652,7 +666,6 @@ class main(gr.top_block, Qt.QWidget):
         self.freq = freq
         self._freq_callback(self.freq)
         self.ieee802_11_frame_equalizer_0.set_frequency(self.freq)
-        self.wifi_phy_hier_0.set_frequency(self.freq)
 
     def get_fir_win(self):
         return self.fir_win
@@ -669,7 +682,7 @@ class main(gr.top_block, Qt.QWidget):
     def set_encoding(self, encoding):
         self.encoding = encoding
         self._encoding_callback(self.encoding)
-        self.wifi_phy_hier_0.set_encoding(ieee802_11.Encoding(self.encoding))
+        self.ieee802_11_mapper_0.set_encoding(ieee802_11.Encoding(self.encoding))
 
     def get_dif_lo(self):
         return self.dif_lo
