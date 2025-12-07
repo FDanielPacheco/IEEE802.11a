@@ -66,7 +66,7 @@ blocks:
     start: '-5'
     step: '0.01'
     stop: '5'
-    value: '-3'
+    value: '-0.5'
     widget: counter_slider
   states:
     bus_sink: false
@@ -1670,7 +1670,7 @@ blocks:
     color9: '"red"'
     comment: ''
     grid: 'False'
-    gui_hint: ''
+    gui_hint: (12,0,1,1)
     label1: ''
     label10: ''
     label2: ''
@@ -1681,7 +1681,7 @@ blocks:
     label7: ''
     label8: ''
     label9: ''
-    legend: 'True'
+    legend: 'False'
     marker1: '0'
     marker10: '0'
     marker2: '0'
@@ -1762,7 +1762,7 @@ blocks:
     color9: '"red"'
     comment: ''
     grid: 'False'
-    gui_hint: ''
+    gui_hint: (12,1,1,1)
     label1: ''
     label10: ''
     label2: ''
@@ -1773,7 +1773,7 @@ blocks:
     label7: ''
     label8: ''
     label9: ''
-    legend: 'True'
+    legend: 'False'
     marker1: '0'
     marker10: '0'
     marker2: '0'
@@ -1844,7 +1844,7 @@ blocks:
     average: '1.0'
     axislabels: 'True'
     bw: samp_rate
-    color1: '"blue"'
+    color1: '"black"'
     color10: '"dark blue"'
     color2: '"red"'
     color3: '"green"'
@@ -1860,7 +1860,7 @@ blocks:
     fftsize: '1024'
     freqhalf: 'True'
     grid: 'False'
-    gui_hint: ''
+    gui_hint: (13,0,1,1)
     label: Relative Gain
     label1: ''
     label10: ''''''
@@ -1872,10 +1872,10 @@ blocks:
     label7: ''''''
     label8: ''''''
     label9: ''''''
-    legend: 'True'
+    legend: 'False'
     maxoutbuf: '0'
     minoutbuf: '0'
-    name: Antenna TX
+    name: Antenna TX Spectrum
     nconnections: '1'
     norm_window: 'False'
     showports: 'False'
@@ -1903,7 +1903,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [944, 3120.0]
+    coordinate: [944, 3104.0]
     rotation: 0
     state: true
 - name: qtgui_time_sink_x_0
@@ -1937,7 +1937,7 @@ blocks:
     ctrlpanel: 'False'
     entags: 'True'
     grid: 'False'
-    gui_hint: ''
+    gui_hint: (14,0,1,1)
     label1: Autocorrelation
     label10: Signal 10
     label2: 'Null '
@@ -1953,7 +1953,7 @@ blocks:
     marker10: '-1'
     marker2: '0'
     marker3: '0'
-    marker4: '0'
+    marker4: '-1'
     marker5: '-1'
     marker6: '-1'
     marker7: '-1'
@@ -1968,7 +1968,7 @@ blocks:
     style10: '1'
     style2: '0'
     style3: '1'
-    style4: '1'
+    style4: '0'
     style5: '1'
     style6: '1'
     style7: '1'
@@ -2000,9 +2000,203 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [2272, 736.0]
+    coordinate: [2304, 736.0]
     rotation: 0
     state: enabled
+- name: qtgui_time_sink_x_0_0
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: black
+    color10: dark blue
+    color2: red
+    color3: red
+    color4: blue
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'False'
+    entags: 'False'
+    grid: 'False'
+    gui_hint: (14,1,1,1)
+    label1: Autocorrelation
+    label10: Signal 10
+    label2: 'Null '
+    label3: Input Waveform Real
+    label4: Input Waveform Imag
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'False'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '0'
+    marker3: '0'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: Autocorrelation , Input Waveform
+    nconnections: '2'
+    size: '20000'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '0'
+    style3: '1'
+    style4: '0'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: trigger_level
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '1'
+    ymin: '-1'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [2304, 624.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_time_sink_x_1
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: black
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'False'
+    gui_hint: (13,1,1,1)
+    label1: Signal 1
+    label10: Signal 10
+    label2: Signal 2
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'False'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: Antenna TX Time Evo.
+    nconnections: '1'
+    size: '160'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '3'
+    ymin: '-3'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [944, 2928.0]
+    rotation: 0
+    state: true
 - name: virtual_sink_0
   id: virtual_sink
   parameters:
@@ -2209,6 +2403,7 @@ blocks:
 
 connections:
 - [blocks_add_const_vxx_0, '0', qtgui_time_sink_x_0, '1']
+- [blocks_add_const_vxx_0, '0', qtgui_time_sink_x_0_0, '1']
 - [blocks_complex_to_mag_0, '0', blocks_divide_xx_0, '0']
 - [blocks_complex_to_mag_squared_0_0, '0', blocks_moving_average_xx_0_0, '0']
 - [blocks_delay_0, '0', blocks_multiply_conjugate_cc_0, '1']
@@ -2219,6 +2414,7 @@ connections:
 - [blocks_divide_xx_0, '0', virtual_sink_1, '0']
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
 - [blocks_float_to_complex_0, '0', qtgui_time_sink_x_0, '0']
+- [blocks_float_to_complex_0, '0', qtgui_time_sink_x_0_0, '0']
 - [blocks_message_strobe_0_0, strobe, ieee802_11_mac_0, app in]
 - [blocks_moving_average_xx_0, '0', blocks_complex_to_mag_0, '0']
 - [blocks_moving_average_xx_0, '0', virtual_sink_2, '0']
@@ -2240,6 +2436,7 @@ connections:
 - [digital_ofdm_carrier_allocator_cvc_0_0_0, '0', fft_vxx_0_0, '0']
 - [digital_ofdm_cyclic_prefixer_0_0, '0', blocks_multiply_const_vxx_0_0, '0']
 - [digital_ofdm_cyclic_prefixer_0_0, '0', qtgui_freq_sink_x_0, '0']
+- [digital_ofdm_cyclic_prefixer_0_0, '0', qtgui_time_sink_x_1, '0']
 - [digital_packet_headergenerator_bb_0, '0', digital_chunks_to_symbols_xx_0, '0']
 - [fft_vxx_0, '0', ieee802_11_frame_equalizer_0, '0']
 - [fft_vxx_0_0, '0', digital_ofdm_cyclic_prefixer_0_0, '0']
