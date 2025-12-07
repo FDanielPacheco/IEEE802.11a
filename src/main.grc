@@ -904,7 +904,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [912, 3040.0]
+    coordinate: [944, 3040.0]
     rotation: 0
     state: enabled
 - name: blocks_multiply_const_vxx_0_1
@@ -1321,7 +1321,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1088, 3008.0]
+    coordinate: [1120, 3008.0]
     rotation: 0
     state: enabled
 - name: foo_wireshark_connector_0
@@ -1903,7 +1903,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1288, 2928.0]
+    coordinate: [944, 3120.0]
     rotation: 0
     state: true
 - name: qtgui_time_sink_x_0
@@ -2078,7 +2078,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1288, 3040.0]
+    coordinate: [1320, 3040.0]
     rotation: 0
     state: enabled
 - name: virtual_sink_2_0_0_0_0
@@ -2239,10 +2239,10 @@ connections:
 - [digital_chunks_to_symbols_xx_0, '0', blocks_tagged_stream_mux_0, '0']
 - [digital_ofdm_carrier_allocator_cvc_0_0_0, '0', fft_vxx_0_0, '0']
 - [digital_ofdm_cyclic_prefixer_0_0, '0', blocks_multiply_const_vxx_0_0, '0']
+- [digital_ofdm_cyclic_prefixer_0_0, '0', qtgui_freq_sink_x_0, '0']
 - [digital_packet_headergenerator_bb_0, '0', digital_chunks_to_symbols_xx_0, '0']
 - [fft_vxx_0, '0', ieee802_11_frame_equalizer_0, '0']
 - [fft_vxx_0_0, '0', digital_ofdm_cyclic_prefixer_0_0, '0']
-- [foo_packet_pad2_0, '0', qtgui_freq_sink_x_0, '0']
 - [foo_packet_pad2_0, '0', virtual_sink_2_0_0_0, '0']
 - [foo_wireshark_connector_0, '0', blocks_file_sink_0, '0']
 - [foo_wireshark_connector_0_0, '0', blocks_file_sink_0_0, '0']
