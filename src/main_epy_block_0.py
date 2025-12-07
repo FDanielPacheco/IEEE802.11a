@@ -58,5 +58,4 @@ class basic_block(gr.sync_block):  # other base classes are basic_block, decim_b
                     self.sample_count = 0
 
         self.consume_each(nin)
-
         return nout

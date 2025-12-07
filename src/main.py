@@ -46,6 +46,7 @@ from PyQt5 import QtCore
 from wifi_phy_hier import wifi_phy_hier  # grc-generated hier_block
 import foo
 import ieee802_11
+import main_epy_block_0 as epy_block_0  # embedded python block
 
 
 
@@ -114,13 +115,16 @@ class main(gr.top_block, Qt.QWidget):
         # Blocks
         ##################################################
 
+        self._trigger_power_range = Range(1e-6, 1, 1e-6, 1e-4, 50)
+        self._trigger_power_win = RangeWidget(self._trigger_power_range, self.set_trigger_power, "Trigger Power Level", "counter", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._trigger_power_win)
         self._trigger_level_range = Range(0, 1, 0.01, 0.7, 50)
         self._trigger_level_win = RangeWidget(self._trigger_level_range, self.set_trigger_level, "Plateau Trigger", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._trigger_level_win)
         # Create the options list
-        self._sync_length_options = [64, 80, 160, 320]
+        self._sync_length_options = [240, 320]
         # Create the labels list
-        self._sync_length_labels = ['64', '80', '160', '320']
+        self._sync_length_labels = ['240', '320']
         # Create the combo box
         self._sync_length_tool_bar = Qt.QToolBar(self)
         self._sync_length_tool_bar.addWidget(Qt.QLabel("Long Sync Length" + ": "))
@@ -269,9 +273,6 @@ class main(gr.top_block, Qt.QWidget):
         self._tx_att_range = Range(0, 100, 0.01, 1, 200)
         self._tx_att_win = RangeWidget(self._tx_att_range, self.set_tx_att, "TX Attenuation", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._tx_att_win)
-        self._trigger_power_range = Range(1e-6, 1, 1e-6, 1e-4, 50)
-        self._trigger_power_win = RangeWidget(self._trigger_power_range, self.set_trigger_power, "Trigger Power Level", "counter", float, QtCore.Qt.Horizontal)
-        self.top_layout.addWidget(self._trigger_power_win)
         self._rx_gain_range = Range(0, 74.5, 0.01, 61, 200)
         self._rx_gain_win = RangeWidget(self._rx_gain_range, self.set_rx_gain, "RX Gain", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._rx_gain_win)
@@ -333,7 +334,7 @@ class main(gr.top_block, Qt.QWidget):
             1, #number of inputs
             None # parent
         )
-        self.qtgui_const_sink_x_0_0.set_update_time(0.010)
+        self.qtgui_const_sink_x_0_0.set_update_time(0.10)
         self.qtgui_const_sink_x_0_0.set_y_axis((-2), 2)
         self.qtgui_const_sink_x_0_0.set_x_axis((-2), 2)
         self.qtgui_const_sink_x_0_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
@@ -441,6 +442,7 @@ class main(gr.top_block, Qt.QWidget):
         self.foo_packet_pad2_0 = foo.packet_pad2(False, False, 0.001, 500, 0)
         self.foo_packet_pad2_0.set_min_output_buffer((out_buf_size * 10))
         self.fft_vxx_0 = fft.fft_vcc(64, True, window.rectangular(64), True, 1)
+        self.epy_block_0 = epy_block_0.basic_block(power_thres=trigger_power, window_size=80)
         self.channels_channel_model_0 = channels.channel_model(
             noise_voltage=1,
             frequency_offset=0.0,
@@ -489,7 +491,7 @@ class main(gr.top_block, Qt.QWidget):
         self.msg_connect((self.wifi_phy_hier_0, 'carrier'), (self.pdu_pdu_to_tagged_stream_0_0, 'pdus'))
         self.connect((self.blocks_add_const_vxx_0, 0), (self.qtgui_time_sink_x_0, 1))
         self.connect((self.blocks_complex_to_mag_0, 0), (self.blocks_divide_xx_0, 0))
-        self.connect((self.blocks_complex_to_mag_squared_0_0, 0), (self.blocks_moving_average_xx_0_0, 0))
+        self.connect((self.blocks_complex_to_mag_squared_0_0, 0), (self.epy_block_0, 1))
         self.connect((self.blocks_delay_0, 0), (self.blocks_multiply_conjugate_cc_0, 1))
         self.connect((self.blocks_delay_0, 0), (self.blocks_multiply_const_vxx_3, 0))
         self.connect((self.blocks_delay_0, 0), (self.ieee802_11_sync_short_0, 0))
@@ -512,10 +514,12 @@ class main(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_multiply_const_xx_0, 0), (self.channels_channel_model_0, 0))
         self.connect((self.blocks_null_source_0, 0), (self.blocks_float_to_complex_0, 1))
         self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.blocks_delay_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_const_vxx_0_1, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.epy_block_0, 0))
         self.connect((self.channels_channel_model_0, 0), (self.blocks_throttle_0, 0))
+        self.connect((self.epy_block_0, 0), (self.blocks_delay_0, 0))
+        self.connect((self.epy_block_0, 1), (self.blocks_moving_average_xx_0_0, 0))
+        self.connect((self.epy_block_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
         self.connect((self.fft_vxx_0, 0), (self.ieee802_11_frame_equalizer_0, 0))
         self.connect((self.foo_packet_pad2_0, 0), (self.blocks_multiply_const_vxx_2, 0))
         self.connect((self.foo_packet_pad2_0, 0), (self.blocks_multiply_const_xx_0, 0))
@@ -561,6 +565,7 @@ class main(gr.top_block, Qt.QWidget):
 
     def set_trigger_power(self, trigger_power):
         self.trigger_power = trigger_power
+        self.epy_block_0.power_thres = self.trigger_power
 
     def get_trigger_level(self):
         return self.trigger_level
