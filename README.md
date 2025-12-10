@@ -1,2 +1,1 @@
-# IEEE802.11a
-IEEE 802.11a OFDM receiver based on GNURadio
+The contents of this project are explained in detail at: https://github.com/FDanielPacheco/IEEE802.11a/wiki
