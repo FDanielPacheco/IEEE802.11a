@@ -269,6 +269,69 @@ blocks:
     coordinate: [240, 2288.0]
     rotation: 0
     state: enabled
+- name: jammer_amp
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: Jammer Amplitude
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0'
+    step: '0.1'
+    stop: '100'
+    value: '1'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 3264.0]
+    rotation: 0
+    state: true
+- name: jammer_bandwidth
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: Jammer Bandwidth
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: 1e6
+    step: 0.5e6
+    stop: 200e6
+    value: 1e6
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [192, 3264.0]
+    rotation: 0
+    state: true
+- name: jammer_freq
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: Jammer Freq.
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: 1e3
+    step: 0.1e3
+    stop: 20e6
+    value: 1e3
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [328, 3264.0]
+    rotation: 0
+    state: true
 - name: lo_offset
   id: variable_qtgui_chooser
   parameters:
@@ -584,6 +647,28 @@ blocks:
     coordinate: [624, 2288.0]
     rotation: 0
     state: enabled
+- name: analog_sig_source_x_0
+  id: analog_sig_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: 'jammer_bandwidth / 1e6 '
+    comment: ''
+    freq: jammer_freq
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    phase: '0'
+    samp_rate: samp_rate
+    type: float
+    waveform: analog.GR_SAW_WAVE
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [56, 3424.0]
+    rotation: 0
+    state: true
 - name: blocks_add_const_vxx_0
   id: blocks_add_const_vxx
   parameters:
@@ -600,6 +685,24 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [2096, 816.0]
+    rotation: 0
+    state: true
+- name: blocks_add_xx_0
+  id: blocks_add_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_inputs: '2'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [840, 304.0]
     rotation: 0
     state: true
 - name: blocks_complex_to_mag_0
@@ -688,9 +791,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [640, 304.0]
+    coordinate: [1144, 320.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: blocks_divide_xx_0
   id: blocks_divide_xx
   parameters:
@@ -781,6 +884,22 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [1952, 736.0]
+    rotation: 0
+    state: true
+- name: blocks_float_to_complex_1
+  id: blocks_float_to_complex
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [640, 440.0]
     rotation: 0
     state: true
 - name: blocks_message_debug_0
@@ -987,6 +1106,24 @@ blocks:
     coordinate: [232, 296.0]
     rotation: 0
     state: enabled
+- name: blocks_multiply_const_xx_1
+  id: blocks_multiply_const_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    const: jammer_amp
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [408, 3464.0]
+    rotation: 0
+    state: true
 - name: blocks_null_source_0
   id: blocks_null_source
   parameters:
@@ -1060,9 +1197,27 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [792, 192.0]
+    coordinate: [1312, 192.0]
     rotation: 0
     state: enabled
+- name: blocks_vco_f_0
+  id: blocks_vco_f
+  parameters:
+    affinity: ''
+    alias: ''
+    amplitude: jammer_amp
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+    sensitivity: 1e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [248, 3448.0]
+    rotation: 0
+    state: true
 - name: channels_channel_model_0
   id: channels_channel_model
   parameters:
@@ -1081,7 +1236,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [424, 256.0]
+    coordinate: [928, 272.0]
     rotation: 0
     state: enabled
 - name: digital_chunks_to_symbols_xx_0
@@ -1621,7 +1776,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [792, 340.0]
+    coordinate: [1312, 340.0]
     rotation: 0
     state: disabled
 - name: pdu_pdu_to_tagged_stream_0
@@ -1711,7 +1866,7 @@ blocks:
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
     type: complex
-    update_time: '0.10'
+    update_time: '10'
     width1: '1'
     width10: '1'
     width2: '1'
@@ -1803,7 +1958,7 @@ blocks:
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
     type: complex
-    update_time: '0.10'
+    update_time: '10'
     width1: '1'
     width10: '1'
     width2: '1'
@@ -1885,7 +2040,7 @@ blocks:
     tr_tag: '""'
     type: complex
     units: dB
-    update_time: '0.10'
+    update_time: '10'
     width1: '1'
     width10: '1'
     width2: '1'
@@ -1981,7 +2136,7 @@ blocks:
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
     type: complex
-    update_time: '0.10'
+    update_time: '10'
     width1: '1'
     width10: '1'
     width2: '1'
@@ -2078,7 +2233,7 @@ blocks:
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
     type: complex
-    update_time: '0.10'
+    update_time: '10'
     width1: '1'
     width10: '1'
     width2: '1'
@@ -2175,7 +2330,7 @@ blocks:
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
     type: complex
-    update_time: '0.10'
+    update_time: '10'
     width1: '1'
     width10: '1'
     width2: '1'
@@ -2207,9 +2362,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1048, 192.0]
+    coordinate: [1568, 192.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: virtual_sink_1
   id: virtual_sink
   parameters:
@@ -2288,6 +2443,19 @@ blocks:
     coordinate: [1624, 2736.0]
     rotation: 0
     state: enabled
+- name: virtual_sink_3
+  id: virtual_sink
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: jammer_out
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [584, 3464.0]
+    rotation: 0
+    state: true
 - name: virtual_source_0
   id: virtual_source
   parameters:
@@ -2400,10 +2568,25 @@ blocks:
     coordinate: [48, 1096.0]
     rotation: 0
     state: enabled
+- name: virtual_source_2
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: jammer_out
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [408, 432.0]
+    rotation: 0
+    state: true
 
 connections:
+- [analog_sig_source_x_0, '0', blocks_vco_f_0, '0']
 - [blocks_add_const_vxx_0, '0', qtgui_time_sink_x_0, '1']
 - [blocks_add_const_vxx_0, '0', qtgui_time_sink_x_0_0, '1']
+- [blocks_add_xx_0, '0', channels_channel_model_0, '0']
 - [blocks_complex_to_mag_0, '0', blocks_divide_xx_0, '0']
 - [blocks_complex_to_mag_squared_0_0, '0', blocks_moving_average_xx_0_0, '0']
 - [blocks_delay_0, '0', blocks_multiply_conjugate_cc_0, '1']
@@ -2415,6 +2598,7 @@ connections:
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
 - [blocks_float_to_complex_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_float_to_complex_0, '0', qtgui_time_sink_x_0_0, '0']
+- [blocks_float_to_complex_1, '0', blocks_add_xx_0, '1']
 - [blocks_message_strobe_0_0, strobe, ieee802_11_mac_0, app in]
 - [blocks_moving_average_xx_0, '0', blocks_complex_to_mag_0, '0']
 - [blocks_moving_average_xx_0, '0', virtual_sink_2, '0']
@@ -2426,11 +2610,13 @@ connections:
 - [blocks_multiply_const_vxx_1, '0', blocks_delay_0_0, '0']
 - [blocks_multiply_const_vxx_1, '0', ieee802_11_sync_long_0, '0']
 - [blocks_multiply_const_vxx_3, '0', blocks_add_const_vxx_0, '0']
-- [blocks_multiply_const_xx_0, '0', channels_channel_model_0, '0']
+- [blocks_multiply_const_xx_0, '0', blocks_add_xx_0, '0']
+- [blocks_multiply_const_xx_1, '0', virtual_sink_3, '0']
 - [blocks_null_source_0, '0', blocks_float_to_complex_0, '1']
 - [blocks_stream_to_vector_0, '0', virtual_sink_2_0_0, '0']
 - [blocks_tagged_stream_mux_0, '0', virtual_sink_2_0_0_0_0, '0']
 - [blocks_throttle_0, '0', virtual_sink_0, '0']
+- [blocks_vco_f_0, '0', blocks_multiply_const_xx_1, '0']
 - [channels_channel_model_0, '0', blocks_delay_1, '0']
 - [digital_chunks_to_symbols_xx_0, '0', blocks_tagged_stream_mux_0, '0']
 - [digital_ofdm_carrier_allocator_cvc_0_0_0, '0', fft_vxx_0_0, '0']
@@ -2470,6 +2656,8 @@ connections:
 - [virtual_source_1_0_0_1_1, '0', fft_vxx_0, '0']
 - [virtual_source_1_0_0_1_2, '0', blocks_multiply_const_vxx_3, '0']
 - [virtual_source_1_1, '0', ieee802_11_sync_short_0, '2']
+- [virtual_source_2, '0', blocks_float_to_complex_1, '0']
+- [virtual_source_2, '0', blocks_float_to_complex_1, '1']
 
 metadata:
   file_format: 1

@@ -26,6 +26,7 @@ from PyQt5.QtCore import QObject, pyqtSlot
 from gnuradio import qtgui
 from gnuradio.filter import firdes
 import sip
+from gnuradio import analog
 from gnuradio import blocks
 import pmt
 from gnuradio import channels
@@ -99,6 +100,9 @@ class main(gr.top_block, Qt.QWidget):
         self.noise_v = noise_v = 10**(noise/10)
         self.max_symbols = max_symbols = int(5 + 1 + ((16 + 800 * 8 + 6) * 2) / 24)
         self.lo_offset = lo_offset = 0
+        self.jammer_freq = jammer_freq = 1e3
+        self.jammer_bandwidth = jammer_bandwidth = 1e6
+        self.jammer_amp = jammer_amp = 1
         self.interval = interval = 5000
         self.freq = freq = 2417000000
         self.fir_win = fir_win = 48
@@ -160,6 +164,15 @@ class main(gr.top_block, Qt.QWidget):
         self._pdu_length_range = Range(0, 1500, 1, 500, 200)
         self._pdu_length_win = RangeWidget(self._pdu_length_range, self.set_pdu_length, "'pdu_length'", "counter_slider", int, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._pdu_length_win)
+        self._jammer_freq_range = Range(1e3, 20e6, 0.1e3, 1e3, 200)
+        self._jammer_freq_win = RangeWidget(self._jammer_freq_range, self.set_jammer_freq, "Jammer Freq.", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._jammer_freq_win)
+        self._jammer_bandwidth_range = Range(1e6, 200e6, 0.5e6, 1e6, 200)
+        self._jammer_bandwidth_win = RangeWidget(self._jammer_bandwidth_range, self.set_jammer_bandwidth, "Jammer Bandwidth", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._jammer_bandwidth_win)
+        self._jammer_amp_range = Range(0, 100, 0.1, 1, 200)
+        self._jammer_amp_win = RangeWidget(self._jammer_amp_range, self.set_jammer_amp, "Jammer Amplitude", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._jammer_amp_win)
         self._interval_range = Range(1000, 100000, 1, 5000, 200)
         self._interval_win = RangeWidget(self._interval_range, self.set_interval, "'interval'", "counter_slider", int, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._interval_win)
@@ -273,7 +286,7 @@ class main(gr.top_block, Qt.QWidget):
             1, #number of inputs
             None # parent
         )
-        self.qtgui_time_sink_x_1.set_update_time(0.10)
+        self.qtgui_time_sink_x_1.set_update_time(10)
         self.qtgui_time_sink_x_1.set_y_axis(-3, 3)
 
         self.qtgui_time_sink_x_1.set_y_label('Amplitude', "")
@@ -329,7 +342,7 @@ class main(gr.top_block, Qt.QWidget):
             2, #number of inputs
             None # parent
         )
-        self.qtgui_time_sink_x_0_0.set_update_time(0.10)
+        self.qtgui_time_sink_x_0_0.set_update_time(10)
         self.qtgui_time_sink_x_0_0.set_y_axis(-1, 1)
 
         self.qtgui_time_sink_x_0_0.set_y_label('Amplitude', "")
@@ -385,7 +398,7 @@ class main(gr.top_block, Qt.QWidget):
             2, #number of inputs
             None # parent
         )
-        self.qtgui_time_sink_x_0.set_update_time(0.10)
+        self.qtgui_time_sink_x_0.set_update_time(10)
         self.qtgui_time_sink_x_0.set_y_axis(-1, 1)
 
         self.qtgui_time_sink_x_0.set_y_label('Amplitude', "")
@@ -443,7 +456,7 @@ class main(gr.top_block, Qt.QWidget):
             1,
             None # parent
         )
-        self.qtgui_freq_sink_x_0.set_update_time(0.10)
+        self.qtgui_freq_sink_x_0.set_update_time(10)
         self.qtgui_freq_sink_x_0.set_y_axis((-140), 10)
         self.qtgui_freq_sink_x_0.set_y_label('Relative Gain', 'dB')
         self.qtgui_freq_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, 0.0, 0, "")
@@ -487,7 +500,7 @@ class main(gr.top_block, Qt.QWidget):
             1, #number of inputs
             None # parent
         )
-        self.qtgui_const_sink_x_0_0.set_update_time(0.10)
+        self.qtgui_const_sink_x_0_0.set_update_time(10)
         self.qtgui_const_sink_x_0_0.set_y_axis((-2), 2)
         self.qtgui_const_sink_x_0_0.set_x_axis((-2), 2)
         self.qtgui_const_sink_x_0_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
@@ -533,7 +546,7 @@ class main(gr.top_block, Qt.QWidget):
             1, #number of inputs
             None # parent
         )
-        self.qtgui_const_sink_x_0.set_update_time(0.10)
+        self.qtgui_const_sink_x_0.set_update_time(10)
         self.qtgui_const_sink_x_0.set_y_axis((-2), 2)
         self.qtgui_const_sink_x_0.set_x_axis((-2), 2)
         self.qtgui_const_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
@@ -628,11 +641,13 @@ class main(gr.top_block, Qt.QWidget):
             taps=[1.0 + 1.0j],
             noise_seed=0,
             block_tags=False)
+        self.blocks_vco_f_0 = blocks.vco_f(samp_rate, 1e6, jammer_amp)
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
         self.blocks_tagged_stream_mux_0 = blocks.tagged_stream_mux(gr.sizeof_gr_complex*1, "packet_len", 1)
         self.blocks_tagged_stream_mux_0.set_min_output_buffer((max_symbols * 48 * 8))
         self.blocks_stream_to_vector_0 = blocks.stream_to_vector(gr.sizeof_gr_complex*1, 64)
         self.blocks_null_source_0 = blocks.null_source(gr.sizeof_float*1)
+        self.blocks_multiply_const_xx_1 = blocks.multiply_const_ff(jammer_amp, 1)
         self.blocks_multiply_const_xx_0 = blocks.multiply_const_cc((10**(snr/10.0))**.5, 1)
         self.blocks_multiply_const_vxx_3 = blocks.multiply_const_cc(att_sink)
         self.blocks_multiply_const_vxx_1 = blocks.multiply_const_cc(1)
@@ -645,6 +660,7 @@ class main(gr.top_block, Qt.QWidget):
         self.blocks_moving_average_xx_0 = blocks.moving_average_cc(fir_win, 1, 4000, 1)
         self.blocks_message_strobe_0_0 = blocks.message_strobe(pmt.intern("".join(chr(i) for i in range(ord('A'), ord('Z')+1)) * (pdu_length // 26 + 1)), interval)
         self.blocks_message_debug_0 = blocks.message_debug(True)
+        self.blocks_float_to_complex_1 = blocks.float_to_complex(1)
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
         self.blocks_file_sink_0_0 = blocks.file_sink(gr.sizeof_char*1, '/tmp/wifi_tx.pcap', False)
         self.blocks_file_sink_0_0.set_unbuffered(True)
@@ -656,7 +672,9 @@ class main(gr.top_block, Qt.QWidget):
         self.blocks_delay_0 = blocks.delay(gr.sizeof_gr_complex*1, 16)
         self.blocks_complex_to_mag_squared_0_0 = blocks.complex_to_mag_squared(1)
         self.blocks_complex_to_mag_0 = blocks.complex_to_mag(1)
+        self.blocks_add_xx_0 = blocks.add_vcc(1)
         self.blocks_add_const_vxx_0 = blocks.add_const_cc(att_sink_offset)
+        self.analog_sig_source_x_0 = analog.sig_source_f(samp_rate, analog.GR_SAW_WAVE, jammer_freq, (jammer_bandwidth / 1e6 ), 0, 0)
 
 
         ##################################################
@@ -670,8 +688,10 @@ class main(gr.top_block, Qt.QWidget):
         self.msg_connect((self.ieee802_11_mac_0, 'phy out'), (self.ieee802_11_parse_mac_0_0, 'in'))
         self.msg_connect((self.ieee802_11_parse_mac_0, 'out'), (self.foo_wireshark_connector_0, 'in'))
         self.msg_connect((self.ieee802_11_parse_mac_0_0, 'out'), (self.foo_wireshark_connector_0_0, 'in'))
+        self.connect((self.analog_sig_source_x_0, 0), (self.blocks_vco_f_0, 0))
         self.connect((self.blocks_add_const_vxx_0, 0), (self.qtgui_time_sink_x_0, 1))
         self.connect((self.blocks_add_const_vxx_0, 0), (self.qtgui_time_sink_x_0_0, 1))
+        self.connect((self.blocks_add_xx_0, 0), (self.channels_channel_model_0, 0))
         self.connect((self.blocks_complex_to_mag_0, 0), (self.blocks_divide_xx_0, 0))
         self.connect((self.blocks_complex_to_mag_squared_0_0, 0), (self.blocks_moving_average_xx_0_0, 0))
         self.connect((self.blocks_delay_0, 0), (self.blocks_multiply_conjugate_cc_0, 1))
@@ -683,6 +703,7 @@ class main(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_divide_xx_0, 0), (self.ieee802_11_sync_short_0, 2))
         self.connect((self.blocks_float_to_complex_0, 0), (self.qtgui_time_sink_x_0, 0))
         self.connect((self.blocks_float_to_complex_0, 0), (self.qtgui_time_sink_x_0_0, 0))
+        self.connect((self.blocks_float_to_complex_1, 0), (self.blocks_add_xx_0, 1))
         self.connect((self.blocks_moving_average_xx_0, 0), (self.blocks_complex_to_mag_0, 0))
         self.connect((self.blocks_moving_average_xx_0, 0), (self.ieee802_11_sync_short_0, 1))
         self.connect((self.blocks_moving_average_xx_0_0, 0), (self.blocks_multiply_const_vxx_0, 0))
@@ -693,13 +714,16 @@ class main(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_multiply_const_vxx_1, 0), (self.blocks_delay_0_0, 0))
         self.connect((self.blocks_multiply_const_vxx_1, 0), (self.ieee802_11_sync_long_0, 0))
         self.connect((self.blocks_multiply_const_vxx_3, 0), (self.blocks_add_const_vxx_0, 0))
-        self.connect((self.blocks_multiply_const_xx_0, 0), (self.channels_channel_model_0, 0))
+        self.connect((self.blocks_multiply_const_xx_0, 0), (self.blocks_add_xx_0, 0))
+        self.connect((self.blocks_multiply_const_xx_1, 0), (self.blocks_float_to_complex_1, 0))
+        self.connect((self.blocks_multiply_const_xx_1, 0), (self.blocks_float_to_complex_1, 1))
         self.connect((self.blocks_null_source_0, 0), (self.blocks_float_to_complex_0, 1))
         self.connect((self.blocks_stream_to_vector_0, 0), (self.fft_vxx_0, 0))
         self.connect((self.blocks_tagged_stream_mux_0, 0), (self.digital_ofdm_carrier_allocator_cvc_0_0_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.blocks_delay_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_const_vxx_0_1, 0))
+        self.connect((self.blocks_vco_f_0, 0), (self.blocks_multiply_const_xx_1, 0))
         self.connect((self.channels_channel_model_0, 0), (self.blocks_delay_1, 0))
         self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.blocks_tagged_stream_mux_0, 0))
         self.connect((self.digital_ofdm_carrier_allocator_cvc_0_0_0, 0), (self.fft_vxx_0_0, 0))
@@ -784,6 +808,7 @@ class main(gr.top_block, Qt.QWidget):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self._samp_rate_callback(self.samp_rate)
+        self.analog_sig_source_x_0.set_sampling_freq(self.samp_rate)
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
         self.ieee802_11_frame_equalizer_0.set_bandwidth(self.samp_rate)
         self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate)
@@ -834,6 +859,27 @@ class main(gr.top_block, Qt.QWidget):
     def set_lo_offset(self, lo_offset):
         self.lo_offset = lo_offset
         self._lo_offset_callback(self.lo_offset)
+
+    def get_jammer_freq(self):
+        return self.jammer_freq
+
+    def set_jammer_freq(self, jammer_freq):
+        self.jammer_freq = jammer_freq
+        self.analog_sig_source_x_0.set_frequency(self.jammer_freq)
+
+    def get_jammer_bandwidth(self):
+        return self.jammer_bandwidth
+
+    def set_jammer_bandwidth(self, jammer_bandwidth):
+        self.jammer_bandwidth = jammer_bandwidth
+        self.analog_sig_source_x_0.set_amplitude((self.jammer_bandwidth / 1e6 ))
+
+    def get_jammer_amp(self):
+        return self.jammer_amp
+
+    def set_jammer_amp(self, jammer_amp):
+        self.jammer_amp = jammer_amp
+        self.blocks_multiply_const_xx_1.set_k(self.jammer_amp)
 
     def get_interval(self):
         return self.interval
